@@ -11,3 +11,4 @@ namespace Project.Services.Interfaces
         Task UpdatePatient(Patient patient);
     }
 }
+ 

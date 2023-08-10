@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Project.Models;
 using Project.Repositories;
 using Project.Repositories.Interfaces;
+using Project.Services;
+using Project.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<MedLinkDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("MedLinkConnectionString")));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IPatientService, PatientService>();
 
 var app = builder.Build();
 

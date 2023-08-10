@@ -1,8 +1,155 @@
-﻿@{
+﻿@model IEnumerable<Project.Models.Entities.Patient>
+@{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <p>MedLink is your patient management portal!</p>
 </div>
+
+<h1>Patients</h1>
+<button type="button" class="btn btn-primary" onclick="showModal()">Add patient</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Date of birth
+            </th>
+            <th>
+                Sex
+            </th>
+            <th>
+                Address
+            </th>
+            <th>
+                Contact number
+            </th>
+            <th>
+                Emergency contact
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DateOfBirth)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Sex)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Address)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ContactNumber)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EmergencyContact)
+                </td>
+                <td>
+                    <button type="button" class="btn btn-primary" onclick="showModal()">Medical history</button>
+                    <button type="button" class="btn btn-primary" onclick="showModal()">Insurance</button>
+                    <button type="button" class="btn btn-primary" onclick="showModal()">Bill</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal" id="addPatientModal" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); z-index: 1000;">
+    <div class="modal-content" style="background-color: #fefefe; margin: auto; padding: 20px; width: 40%;">
+        <h4>Add Patient</h4>
+        <form id="addPatientForm">
+            <div class="form-group">
+                <label for="patientName">Name</label>
+                <input type="text" class="form-control" id="patientName" required>
+            </div>
+            <!-- Add other patient fields similarly -->
+            <button type="button" id="savePatient">Save</button>
+        </form>
+    </div>
+</div>
+
+
+
+<script>
+    function showModal() {
+        Swal.fire({
+            title: 'Add Patient',
+            html: `
+                <form id="addPatientForm">
+                    <div class="form-group">
+                        <label for="swal-input1">Name</label>
+                        <input type="text" id="swal-input1" class="swal2-input" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-input3">Date of birth</label>
+                        <input type="date" id="swal-input3" class="swal2-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-input4">Sex</label>
+                        <select id="swal-input4" class="swal2-input">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-input5">Address</label>
+                        <input type="text" id="swal-input5" class="swal2-input" placeholder="123 Main St">
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-input6">Contact Number</label>
+                        <input type="tel" id="swal-input6" class="swal2-input" placeholder="(123) 456-7890">
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-input7">Emergency Number</label>
+                        <input type="tel" id="swal-input7" class="swal2-input" placeholder="(123) 456-7890">
+                    </div>
+                </form>
+            `,
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('swal-input1').value,
+                    dateOfBirth: document.getElementById('swal-input3').value,
+                    sex: document.getElementById('swal-input4').value,
+                    address: document.getElementById('swal-input5').value,
+                    contactNumber: document.getElementById('swal-input6').value,
+                    emergencyContact: document.getElementById('swal-input7').value
+                }
+            }
+        }).then(result => {
+            if (result.isConfirmed) {
+                var patientData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addpatient",
+                    type: "POST",
+                    data: JSON.stringify(patientData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'Patient has been added, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the patient.', 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>

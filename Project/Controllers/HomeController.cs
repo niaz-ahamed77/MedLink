@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Project.Models;
+using Project.Models.Entities;
+using Project.Services.Interfaces;
 using System.Diagnostics;
 
 namespace Project.Controllers
@@ -7,20 +9,21 @@ namespace Project.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly MedLinkDbContext _context;
+        private readonly IPatientService _patientService;
 
-        public HomeController(ILogger<HomeController> logger, MedLinkDbContext context)
+        public HomeController(ILogger<HomeController> logger, IPatientService patientService)
         {
             _logger = logger;
-            _context = context;
+            _patientService = patientService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> IndexAsync()
         {
-            return View();
+            var patients = await _patientService.GetAllPatients();
+            return View(patients);
         }
 
-        public IActionResult Privacy()
+        public IActionResult Doctors()
         {
             return View();
         }
@@ -29,6 +32,14 @@ namespace Project.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        [HttpPost]
+        [Route("addpatient")]
+        public async Task<IActionResult> AddPatient([FromBody] Patient patient)
+        {
+            await _patientService.AddPatient(patient);
+            return Ok();
         }
     }
 }

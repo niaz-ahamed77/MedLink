@@ -31,7 +31,7 @@ namespace Project.Repositories
             }
         }
 
-        public IQueryable<T> GetAll()
+        public async Task<IQueryable<T>> GetAll()
         {
             return _dbSet.AsNoTracking();
         }
