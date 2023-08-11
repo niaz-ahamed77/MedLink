@@ -12,6 +12,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<MedLinkDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("MedLinkConnectionString")));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IMedicalHistoryService, MedicalHistoryService>();
 
 var app = builder.Build();
 

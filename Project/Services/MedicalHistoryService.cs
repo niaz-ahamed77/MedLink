@@ -1,24 +1,28 @@
 ﻿using Project.Models;
 using Project.Models.Entities;
 using Project.Repositories;
+using Project.Repositories.Interfaces;
 using Project.Services.Interfaces;
 
 namespace Project.Services
 {
-    public class MedicalHistoryService : Repository<MedicalHistory>, IMedicalHistoryService
+    public class MedicalHistoryService : IMedicalHistoryService
     {
-        public MedicalHistoryService(MedLinkDbContext dbContext) : base(dbContext)
+        private readonly IRepository<MedicalHistory> _medicalHistoryRepository;
+
+        public MedicalHistoryService(IRepository<MedicalHistory> medicalHistoryRepostiory)
         {
+            _medicalHistoryRepository = medicalHistoryRepostiory;
         }
 
-        public Task AddMedicalHistory(MedicalHistory insurance)
+        public async Task AddMedicalHistory(MedicalHistory medicalHistory)
         {
-            throw new NotImplementedException();
+            await _medicalHistoryRepository.AddAsync(medicalHistory);
         }
 
-        public Task DeleteMedicalHistory(int id)
+        public async Task DeleteMedicalHistory(int id)
         {
-            throw new NotImplementedException();
+            await _medicalHistoryRepository.DeleteAsync(id);
         }
 
         public Task<IQueryable<MedicalHistory>> GetMedicalHistories()
@@ -31,9 +35,9 @@ namespace Project.Services
             throw new NotImplementedException();
         }
 
-        public Task UpdateMedicalHistory(MedicalHistory medicalHistory)
+        public async Task UpdateMedicalHistory(MedicalHistory medicalHistory)
         {
-            throw new NotImplementedException();
+            await _medicalHistoryRepository.UpdateAsync(medicalHistory);
         }
     }
 }

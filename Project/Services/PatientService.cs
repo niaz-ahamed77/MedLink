@@ -20,14 +20,14 @@ namespace Project.Services
             await _patientRepository.AddAsync(patient);
         }
 
-        public Task DeletePatient(int id)
+        public async Task DeletePatient(int id)
         {
-            throw new NotImplementedException();
+            await _patientRepository.DeleteAsync(id);
         }
 
         public async Task<IQueryable<Patient>> GetAllPatients()
         {
-            return await _patientRepository.GetAll();
+            return await _patientRepository.GetAll(p => p.Bills, p => p.MedicalHistories, p => p.Insurances);
         }
 
         public Task<Patient> GetPatient(int id)
@@ -35,9 +35,9 @@ namespace Project.Services
             throw new NotImplementedException();
         }
 
-        public Task UpdatePatient(Patient patient)
+        public async Task UpdatePatient(Patient patient)
         {
-            throw new NotImplementedException();
+            await _patientRepository.UpdateAsync(patient);
         }
     }
 }

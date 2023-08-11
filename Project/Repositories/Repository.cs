@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Project.Models;
 using Project.Repositories.Interfaces;
+using System.Linq.Expressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Project.Repositories
 {
@@ -31,9 +33,16 @@ namespace Project.Repositories
             }
         }
 
-        public async Task<IQueryable<T>> GetAll()
+        public async Task<IQueryable<T>> GetAll(params Expression<Func<T, object>>[] includeProperties)
         {
-            return _dbSet.AsNoTracking();
+            IQueryable<T> query = _dbSet.AsNoTracking();
+
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+
+            return query;
         }
 
         public async Task<T> GetAsync(int id)
