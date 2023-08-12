@@ -1,0 +1,752 @@
+﻿@model IEnumerable<Project.Models.Entities.Patient>
+@{
+    ViewData["Title"] = "Patients";
+}
+
+<h1>Patients</h1>
+<button type="button" class="btn btn-primary" onclick="showAddPatientModal()">Add patient</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Date of birth
+            </th>
+            <th>
+                Age
+            </th>
+            <th>
+                Sex
+            </th>
+            <th>
+                Address
+            </th>
+            <th>
+                Contact number
+            </th>
+            <th>
+                Emergency contact
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DateOfBirth)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Age)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Sex)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Address)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ContactNumber)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EmergencyContact)
+                </td>
+                <td>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Medical History" onclick="showMedicalHistoryModal(this)" data-patient-id="@item.PatientId" data-medical-history='@Json.Serialize(item.MedicalHistories)'>
+                        <i class="bi bi-journal-medical"></i>
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Bills" onclick="showBillModal(this)" data-patient-id="@item.PatientId" data-bill='@Json.Serialize(item.Bills)'><i class="bi bi-receipt-cutoff"></i></button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Insurances" onclick="showInsuranceModal(this)" data-patient-id="@item.PatientId" data-insurance='@Json.Serialize(item.Insurances)'><i class="bi bi-shield-check"></i></button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Patient Tests"><i class="bi bi-card-list"></i></button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Appointments"><i class="bi bi-calendar-event"></i></button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Current Illness"><i class="bi bi-exclamation-circle"></i></button>
+                    <button class="btn btn-success" onclick="showEditPatientModal(@item.PatientId, '@item.Name', '@item.DateOfBirth', '@item.Sex', '@item.Address', '@item.ContactNumber', '@item.EmergencyContact')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-danger" onclick="showDeletePatientModal(@item.PatientId, '@item.Name')"><i class="bi bi-x"></i></button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    function showAddPatientModal() {
+        Swal.fire({
+            title: 'Add Patient',
+            html: `
+                    <form id="addPatientForm">
+                        <div class="form-group">
+                            <label for="swal-input1">Name</label>
+                            <input type="text" id="swal-input1" class="swal2-input" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="swal-input3">Date of birth</label>
+                            <input type="date" id="swal-input3" class="swal2-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="swal-input4">Sex</label>
+                            <select id="swal-input4" class="swal2-input">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="swal-input5">Address</label>
+                            <input type="text" id="swal-input5" class="swal2-input" placeholder="123 Main St">
+                        </div>
+                        <div class="form-group">
+                            <label for="swal-input6">Contact Number</label>
+                            <input type="tel" id="swal-input6" class="swal2-input" placeholder="(123) 456-7890">
+                        </div>
+                        <div class="form-group">
+                            <label for="swal-input7">Emergency Number</label>
+                            <input type="tel" id="swal-input7" class="swal2-input" placeholder="(123) 456-7890">
+                        </div>
+                    </form>
+                `,
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('swal-input1').value,
+                    dateOfBirth: document.getElementById('swal-input3').value,
+                    sex: document.getElementById('swal-input4').value,
+                    address: document.getElementById('swal-input5').value,
+                    contactNumber: document.getElementById('swal-input6').value,
+                    emergencyContact: document.getElementById('swal-input7').value
+                }
+            }
+        }).then(result => {
+            if (result.isConfirmed) {
+                var patientData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addpatient",
+                    type: "POST",
+                    data: JSON.stringify(patientData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'Patient has been added, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the patient.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditPatientModal(patientId, name, dateOfBirth, sex, address, contactNumber, emergencyContact) {
+        Swal.fire({
+            title: 'Edit Patient Details',
+            html: `
+                    <input type="text" id="editName" class="swal2-input" placeholder="Name" value="${name}">
+                    <input type="date" id="editDateOfBirth" class="swal2-input" placeholder="Date of Birth" value="${new Date(dateOfBirth).toISOString().split('T')[0]}">
+                    <select id="editSex" class="swal2-input">
+                        <option value="Male" ${sex === 'Male' ? 'selected' : ''}>Male</option>
+                        <option value="Female" ${sex === 'Female' ? 'selected' : ''}>Female</option>
+                    </select>
+                    <input type="text" id="editAddress" class="swal2-input" placeholder="Address" value="${address}">
+                    <input type="text" id="editContactNumber" class="swal2-input" placeholder="Contact Number" value="${contactNumber}">
+                    <input type="text" id="editEmergencyContact" class="swal2-input" placeholder="Emergency Contact" value="${emergencyContact}">`,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    patientId: patientId,
+                    name: document.getElementById('editName').value,
+                    dateOfBirth: document.getElementById('editDateOfBirth').value,
+                    sex: document.getElementById('editSex').value,
+                    address: document.getElementById('editAddress').value,
+                    contactNumber: document.getElementById('editContactNumber').value,
+                    emergencyContact: document.getElementById('editEmergencyContact').value
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var patientData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/editpatient",
+                    type: "PUT",
+                    data: JSON.stringify(patientData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The patient details have been edited, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error editing the patient details.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeletePatientModal(patientId, name) {
+        Swal.fire({
+            title: 'Confirm Deletion',
+            text: `Are you sure you want to delete the patient for ${name}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "https://localhost:7219/deletepatient" + "/" + patientId,
+                    type: "DELETE",
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The patient has been deleted, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the patient.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showMedicalHistoryModal(btn) {
+        var medicalHistories = JSON.parse(btn.getAttribute('data-medical-history'));
+        var patientId = btn.getAttribute('data-patient-id');
+
+        // Check if medicalHistories is empty
+        var historyTable;
+        if (!medicalHistories.length) {
+            historyTable = 'No medical histories available for this patient.';
+        } else {
+            historyTable = `<table class='table'>
+                                <thead>
+                                    <tr>
+                                        <th>Disease Name</th>
+                                        <th>Date Diagnosed</th>
+                                        <th>Treatment</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+            for (var history of medicalHistories) {
+                historyTable += `<tr>
+                                        <td>${history.diseaseName}</td>
+                                        <td>${new Date(history.dateDiagnosed).toLocaleDateString()}</td>
+                                        <td>${history.treatment}</td>
+                                        <td>
+                                            <button class="btn btn-success" onclick="showEditMedicalHistoryModal(${history.medicalHistoryId}, ${patientId}, '${history.diseaseName}', '${history.dateDiagnosed}', '${history.treatment}')"><i class="bi bi-pencil"></i></button>
+                                            <button class="btn btn-danger" onclick="showDeleteMedicalHistoryModal(${history.medicalHistoryId}, '${history.diseaseName}')"><i class="bi bi-x-lg"></i></button>
+                                        </td>
+                                     </tr>`;
+            }
+
+            historyTable += `</tbody></table>`;
+        }
+
+
+        Swal.fire({
+            title: 'Medical History',
+            html: historyTable,
+            width: '60%',
+            customClass: {
+                content: 'text-left'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Add Medical History',
+            showConfirmButton: true,
+            cancelButtonText: 'Close'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showAddMedicalHistoryModal(patientId);
+            }
+        });
+    }
+
+    function showAddMedicalHistoryModal(patientId) {
+        Swal.fire({
+            title: 'Add Medical History',
+            html: `
+                    <input type="text" id="diseaseName" class="swal2-input" placeholder="Disease Name">
+                    <input type="date" id="dateDiagnosed" class="swal2-input">
+                    <input type="text" id="treatment" class="swal2-input" placeholder="Treatment">
+                `,
+            confirmButtonText: 'Add',
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    patientId: patientId,
+                    diseaseName: document.getElementById('diseaseName').value,
+                    dateDiagnosed: document.getElementById('dateDiagnosed').value,
+                    treatment: document.getElementById('treatment').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var historyData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addmedicalhistory",
+                    type: "POST",
+                    data: JSON.stringify(historyData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The history has been added, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the history.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditMedicalHistoryModal(medicalHistoryId, patientId, diseaseName, dateDiagnosed, treatment) {
+        Swal.fire({
+            title: 'Edit Medical History',
+            html: `
+                <input type="text" id="editDiseaseName" class="swal2-input" placeholder="Disease Name" value="${diseaseName}">
+                <input type="date" id="editDateDiagnosed" class="swal2-input" placeholder="Date Diagnosed" value="${new Date(dateDiagnosed).toISOString().split('T')[0]}">
+                <input type="text" id="editTreatment" class="swal2-input" placeholder="Treatment" value="${treatment}">`,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    medicalHistoryId: medicalHistoryId,
+                    patientId: patientId,
+                    diseaseName: document.getElementById('editDiseaseName').value,
+                    dateDiagnosed: document.getElementById('editDateDiagnosed').value,
+                    treatment: document.getElementById('editTreatment').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var historyData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/editmedicalhistory",
+                    type: "PUT",
+                    data: JSON.stringify(historyData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The history has been edited, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error editing the history.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeleteMedicalHistoryModal(medicalHistoryId, diseaseName) {
+        Swal.fire({
+            title: 'Confirm Deletion',
+            text: `Are you sure you want to delete the history for ${diseaseName}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "https://localhost:7219/deletemedicalhistory" + "/" + medicalHistoryId,
+                    type: "DELETE",
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The history has been deleted, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the history.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showBillModal(btn) {
+        var bills = JSON.parse(btn.getAttribute('data-bill'));
+        var patientId = btn.getAttribute('data-patient-id');
+
+        // Check if medicalHistories is empty
+        var billTable;
+        if (!bills.length) {
+            billTable = 'No bills available for this patient.';
+        } else {
+            billTable = `<table class='table'>
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Total Amount</th>
+                                            <th>Payment Status</th>
+                                            <th>Billing Address</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+
+            for (var bill of bills) {
+                billTable += `<tr>
+                                            <td>${new Date(bill.date).toLocaleDateString()}</td>
+                                            <td>${bill.totalAmount}</td>
+                                            <td>${bill.paymentStatus}</td>
+                                            <td>${bill.billingAddress}</td>
+                                            <td>
+                                                <button class="btn btn-success" onclick="showEditBillModal(${bill.billId}, ${patientId}, '${bill.date}', '${bill.totalAmount}', '${bill.paymentStatus}', '${bill.billingAddress}')"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-danger" onclick="showDeleteBillModal(${bill.billId}, '${bill.totalAmount}')"><i class="bi bi-x-lg"></i></button>
+                                            </td>
+                                         </tr>`;
+            }
+
+            billTable += `</tbody></table>`;
+        }
+
+
+        Swal.fire({
+            title: 'Bill',
+            html: billTable,
+            width: '60%',
+            customClass: {
+                content: 'text-left'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Add Bill',
+            showConfirmButton: true,
+            cancelButtonText: 'Close'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showAddBillModal(patientId);
+            }
+        });
+    }
+
+    function showAddBillModal(patientId) {
+        Swal.fire({
+            title: 'Add Bill',
+            html: `
+                <input type="number" id="totalAmount" class="swal2-input" placeholder="Total Amount">
+                <input type="date" id="date" class="swal2-input" placeholder="Date">
+                <select id="paymentStatus" class="swal2-input">
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Partially Paid">Partially Paid</option>
+                    <option value="Overdue">Overdue</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Refunded">Refunded</option>
+                    <option value="In Collections">In Collections</option>
+                    <option value="Write-Off">Write-Off</option>
+                    <option value="Due">Due</option>
+                </select>
+                <input type="text" id="billingAddress" class="swal2-input" placeholder="Billing Address">`,
+            showCancelButton: true,
+            confirmButtonText: 'Add',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    patientId: patientId,
+                    totalAmount: document.getElementById('totalAmount').value,
+                    date: document.getElementById('date').value,
+                    billingAddress: document.getElementById('billingAddress').value,
+                    paymentStatus: document.getElementById('paymentStatus').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var billData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addbill",
+                    type: "POST",
+                    data: JSON.stringify(billData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The bill has been added!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the bill.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditBillModal(billId, patientId, date, totalAmount, paymentStatus, billingAddress) {
+        Swal.fire({
+            title: 'Edit Bill',
+            html: `
+                <input type="number" id="editTotalAmount" class="swal2-input" placeholder="Total Amount" value="${totalAmount}">
+                <input type="date" id="editDate" class="swal2-input" placeholder="Date" value="${new Date(date).toISOString().split('T')[0]}">
+                <select id="editPaymentStatus" class="swal2-input">
+                    <option value="Pending" ${paymentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Paid" ${paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
+                    <option value="Partially Paid" ${paymentStatus === 'Partially Paid' ? 'selected' : ''}>Partially Paid</option>
+                    <option value="Overdue" ${paymentStatus === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                    <option value="On Hold" ${paymentStatus === 'On Hold' ? 'selected' : ''}>On Hold</option>
+                    <option value="Cancelled" ${paymentStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                    <option value="Refunded" ${paymentStatus === 'Refunded' ? 'selected' : ''}>Refunded</option>
+                    <option value="In Collections" ${paymentStatus === 'In Collections' ? 'selected' : ''}>In Collections</option>
+                    <option value="Write-Off" ${paymentStatus === 'Write-Off' ? 'selected' : ''}>Write-Off</option>
+                    <option value="Due" ${paymentStatus === 'Due' ? 'selected' : ''}>Due</option>
+                </select>
+                <input type="text" id="editBillingAddress" class="swal2-input" placeholder="Billing Address" value="${billingAddress}">`,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    billId: billId,
+                    patientId: patientId,
+                    billingAddress: document.getElementById('editBillingAddress').value,
+                    totalAmount: document.getElementById('editTotalAmount').value,
+                    date: document.getElementById('editDate').value,
+                    paymentStatus: document.getElementById('editPaymentStatus').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var editedBillData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/editbill",
+                    type: "PUT",
+                    data: JSON.stringify(editedBillData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The bill has been updated!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error updating the bill.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeleteBillModal(billId, totalAmount) {
+        Swal.fire({
+            title: 'Delete Bill',
+            text: `Are you sure you want to delete the bill with the total amount of $${totalAmount}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `https://localhost:7219/deletebill/${billId}`,
+                    type: "DELETE",
+                    success: function (response) {
+                        Swal.fire('Deleted!', 'The bill has been deleted!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the bill.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showInsuranceModal(btn) {
+        var insurances = JSON.parse(btn.getAttribute('data-insurance'));
+        var patientId = btn.getAttribute('data-patient-id');
+
+        // Check if insurances is empty
+        var insuranceTable;
+        if (!insurances.length) {
+            insuranceTable = 'No insurance records available for this patient.';
+        } else {
+            insuranceTable = `
+                <table class='table'>
+                    <thead>
+                        <tr>
+                            <th>Provider Name</th>
+                            <th>Policy Number</th>
+                            <th>Coverage Details</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            for (var insurance of insurances) {
+                insuranceTable += `
+                    <tr>
+                        <td>${insurance.providername}</td>
+                        <td>${insurance.policyNumber}</td>
+                        <td>${insurance.coverageDetails}</td>
+                        <td>
+                            <button class="btn btn-primary" title="Edit Insurance" onclick="showEditInsuranceModal(${insurance.insuranceId}, ${patientId}, '${insurance.providername}', '${insurance.policyNumber}', '${insurance.coverageDetails}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-danger" title="Delete Insurance" onclick="showDeleteInsuranceModal(${insurance.insuranceId}, '${insurance.providername}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`;
+            }
+
+            insuranceTable += `</tbody></table>`;
+        }
+
+        Swal.fire({
+            title: 'Insurance Details',
+            html: insuranceTable,
+            width: '70%',
+            customClass: {
+                content: 'text-left'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Add Insurance',
+            showConfirmButton: true,
+            cancelButtonText: 'Close'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showAddInsuranceModal(patientId);
+            }
+        });
+    }
+
+    function showAddInsuranceModal(patientId) {
+        Swal.fire({
+            title: 'Add Insurance',
+            html: `
+                <input type="hidden" id="patientId" value="${patientId}">
+                <input type="text" id="providername" class="swal2-input" placeholder="Provider Name">
+                <input type="text" id="policyNumber" class="swal2-input" placeholder="Policy Number">
+                <textarea id="coverageDetails" class="swal2-textarea" placeholder="Coverage Details"></textarea>`,
+            showCancelButton: true,
+            confirmButtonText: 'Add',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var insuranceData = {
+                    patientId: patientId,
+                    providername: document.getElementById('providername').value,
+                    policyNumber: document.getElementById('policyNumber').value,
+                    coverageDetails: document.getElementById('coverageDetails').value
+                };
+
+                $.ajax({
+                    url: "https://localhost:7219/addinsurance",
+                    type: "POST",
+                    data: JSON.stringify(insuranceData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Added!', 'Insurance has been added successfully!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the insurance.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditInsuranceModal(insuranceId, patientId, providername, policyNumber, coverageDetails) {
+        Swal.fire({
+            title: 'Edit Insurance',
+            html: `
+                <input type="hidden" id="insuranceId" value="${insuranceId}">
+                <input type="hidden" id="patientId" value="${patientId}">
+                <input type="text" id="editprovidername" class="swal2-input" placeholder="Provider Name" value="${providername}">
+                <input type="text" id="editPolicyNumber" class="swal2-input" placeholder="Policy Number" value="${policyNumber}">
+                <textarea id="editCoverageDetails" class="swal2-textarea" placeholder="Coverage Details">${coverageDetails}</textarea>`,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var insuranceData = {
+                    insuranceId: insuranceId,
+                    patientId: patientId,
+                    providername: document.getElementById('editprovidername').value,
+                    policyNumber: document.getElementById('editPolicyNumber').value,
+                    coverageDetails: document.getElementById('editCoverageDetails').value
+                };
+
+                $.ajax({
+                    url: "https://localhost:7219/editinsurance",
+                    type: "PUT",
+                    data: JSON.stringify(insuranceData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Updated!', 'Insurance has been updated successfully!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error updating the insurance.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeleteInsuranceModal(insuranceId, providername) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to delete insurance from ${providername}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `https://localhost:7219/deleteinsurance/${insuranceId}`,
+                    type: "DELETE",
+                    success: function (response) {
+                        Swal.fire('Deleted!', 'Insurance has been deleted successfully!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the insurance.', 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>

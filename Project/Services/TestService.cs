@@ -1,39 +1,43 @@
 ﻿using Project.Models;
 using Project.Models.Entities;
 using Project.Repositories;
+using Project.Repositories.Interfaces;
 using Project.Services.Interfaces;
 
 namespace Project.Services
 {
-    public class TestService : Repository<Test>, ITestService
+    public class TestService : ITestService
     {
-        public TestService(MedLinkDbContext dbContext) : base(dbContext)
+        private readonly IRepository<Test> _testRepository;
+
+        public TestService(IRepository<Test> testRepository)
         {
+            _testRepository = testRepository;
         }
 
-        public Task AddTest(Test test)
+        public async Task AddTest(Test test)
+        {
+            await _testRepository.AddAsync(test);
+        }
+
+        public async Task DeleteTest(int id)
+        {
+            await _testRepository.DeleteAsync(id);
+        }
+
+        public async Task<IQueryable<Test>> GetAllTests()
+        {
+            return await _testRepository.GetAll();
+        }
+
+        public Task<Test> GetTest(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task DeleteTest(int id)
+        public async Task UpdateTest(Test test)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<IQueryable<Test>> GetAllTests()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Test> Test(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateTest(Test test)
-        {
-            throw new NotImplementedException();
+            await _testRepository.UpdateAsync(test);
         }
     }
 }

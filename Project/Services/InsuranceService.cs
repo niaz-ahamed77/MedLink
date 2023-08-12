@@ -1,39 +1,43 @@
 ﻿using Project.Models;
 using Project.Models.Entities;
 using Project.Repositories;
+using Project.Repositories.Interfaces;
 using Project.Services.Interfaces;
 
 namespace Project.Services
 {
-    public class InsuranceService : Repository<InsuranceService>, IInsuranceService
+    public class InsuranceService : IInsuranceService
     {
-        public InsuranceService(MedLinkDbContext dbContext) : base(dbContext)
+        private readonly IRepository<Insurance> _insuranceRepository;
+
+        public InsuranceService(IRepository<Insurance> insuranceRepository)
         {
+            _insuranceRepository = insuranceRepository;
         }
 
-        public Task AddInsurance(Insurance insurance)
+        public async Task AddInsurance(Insurance insurance)
+        {
+            await _insuranceRepository.AddAsync(insurance);
+        }
+
+        public async Task DeleteInsurance(int id)
+        {
+            await _insuranceRepository.DeleteAsync(id);
+        }
+
+        public Task<IQueryable<Insurance>> GetAllInsurances()
         {
             throw new NotImplementedException();
         }
 
-        public Task DeleteInsurance(int id)
+        public Task<Insurance> GetInsurance(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IQueryable<Insurance>> GetAllInsurance()
+        public async Task UpdateInsurance(Insurance insurance)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<Insurance> GetCurrentIllness(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateInsurance(Insurance insurance)
-        {
-            throw new NotImplementedException();
+            await _insuranceRepository.UpdateAsync(insurance);
         }
     }
 }

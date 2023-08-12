@@ -1,0 +1,155 @@
+﻿@model IEnumerable<Project.Models.Entities.Test>
+@{
+    ViewData["Title"] = "Tests";
+}
+
+<h1>Test</h1>
+<button type="button" class="btn btn-primary" onclick="showAddTestModal()">Add test</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Test Name
+            </th>
+            <th>
+                Test Details
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TestName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TestDetails)
+                </td>
+                <td>
+                    <button class="btn btn-success" onclick="showEditTestModal(@item.TestId, '@item.TestName', '@item.TestDetails')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-danger" onclick="showDeleteTestModal(@item.TestId, '@item.TestName')"><i class="bi bi-x"></i></button> 
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    function showAddTestModal() {
+        Swal.fire({
+            title: 'Add Test',
+            html: `
+                <form id="addTestForm">
+                    <div class="form-group">
+                        <label for="swal-input1">Test Name</label>
+                        <input type="text" id="swal-input1" class="swal2-input" placeholder="Complete Blood Count">
+                    </div>
+                    <div class="form-group">
+                        <label for="swal-input2">Test Details</label>
+                        <textarea id="swal-input2" class="swal2-textarea"></textarea>
+                    </div>
+                </form>
+            `,
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    testname: document.getElementById('swal-input1').value,
+                    testdetails: document.getElementById('swal-input2').value
+                }
+            }
+        }).then(result => {
+            if (result.isConfirmed) {
+                var testData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addtest",
+                    type: "POST",
+                    data: JSON.stringify(testData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'Test has been added, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the test.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditTestModal(testId, testname, testdetails) {
+        Swal.fire({
+            title: 'Edit Test Details',
+            html: `
+                <input type="text" id="editTestName" class="swal2-input" placeholder="Test Name" value="${testname}">
+                <textarea id="editTestDetails" class="swal2-textarea">${testdetails}</textarea>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    testId: testId,
+                    testname: document.getElementById('editTestName').value,
+                    testdetails: document.getElementById('editTestDetails').value
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var testData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/edittest",
+                    type: "PUT",
+                    data: JSON.stringify(testData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The test details have been edited, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error editing the test details.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeleteTestModal(testId, testname) {
+        Swal.fire({
+            title: 'Confirm Deletion',
+            text: `Are you sure you want to delete the test "${testname}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "https://localhost:7219/deletetest" + "/" + testId,
+                    type: "DELETE",
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The test has been deleted, the page will be reloaded in 3 seconds!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the test.', 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>

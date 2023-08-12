@@ -6,7 +6,7 @@ namespace Project.Services.Interfaces
     {
         Task AddDoctor(Doctor doctor);
         Task<Doctor> GetDoctor(int id);
-        Task<IQueryable<Patient>> GetAllDoctors();
+        Task<IQueryable<Doctor>> GetAllDoctors();
         Task DeleteDoctor(int id);
         Task UpdateDoctor(Doctor doctor);
     }

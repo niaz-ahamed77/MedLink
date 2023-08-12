@@ -1,24 +1,28 @@
 ﻿using Project.Models;
 using Project.Models.Entities;
 using Project.Repositories;
+using Project.Repositories.Interfaces;
 using Project.Services.Interfaces;
 
 namespace Project.Services
 {
-    public class BillService : Repository<Bill>, IBillService
+    public class BillService : IBillService
     {
-        public BillService(MedLinkDbContext dbContext) : base(dbContext)
+        private readonly IRepository<Bill> _billRepository;
+
+        public BillService(IRepository<Bill> billRepository)
         {
+            _billRepository = billRepository;
         }
 
-        public Task AddBill(Bill bill)
+        public async Task AddBill(Bill bill)
         {
-            throw new NotImplementedException();
+            await _billRepository.AddAsync(bill);
         }
 
-        public Task DeleteBill(int id)
+        public async Task DeleteBill(int id)
         {
-            throw new NotImplementedException();
+            await _billRepository.DeleteAsync(id);
         }
 
         public Task<IQueryable<Bill>> GetAllBills()
@@ -31,9 +35,9 @@ namespace Project.Services
             throw new NotImplementedException();
         }
 
-        public Task UpdateBill(Bill bill)
+        public async Task UpdateBill(Bill bill)
         {
-            throw new NotImplementedException();
+            await _billRepository.UpdateAsync(bill);
         }
     }
 }
