@@ -27,7 +27,7 @@ namespace Project.Services
 
         public async Task<IQueryable<Patient>> GetAllPatients()
         {
-            return await _patientRepository.GetAll(p => p.Bills, p => p.MedicalHistories, p => p.Insurances);
+            return await _patientRepository.GetAll(p => p.Bills, p => p.MedicalHistories, p => p.Insurances, p => p.PatientTests, p => p.Appointments, p => p.CurrentIllnesses);
         }
 
         public Task<Patient> GetPatient(int id)

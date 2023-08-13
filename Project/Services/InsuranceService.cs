@@ -25,7 +25,7 @@ namespace Project.Services
             await _insuranceRepository.DeleteAsync(id);
         }
 
-        public Task<IQueryable<Insurance>> GetAllInsurances()
+        public async Task<IQueryable<Insurance>> GetAllInsurances()
         {
             throw new NotImplementedException();
         }

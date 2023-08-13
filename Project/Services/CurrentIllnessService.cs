@@ -1,27 +1,31 @@
 ﻿using Project.Models;
 using Project.Models.Entities;
 using Project.Repositories;
+using Project.Repositories.Interfaces;
 using Project.Services.Interfaces;
 
 namespace Project.Services
 {
-    public class CurrentIllnessService : Repository<CurrentIllness>, ICurrentIllnessService
+    public class CurrentIllnessService : ICurrentIllnessService
     {
-        public CurrentIllnessService(MedLinkDbContext dbContext) : base(dbContext)
+        private readonly IRepository<CurrentIllness> _currentIllnessRepository;
+
+        public CurrentIllnessService(IRepository<CurrentIllness> currentIllnessRepository)
         {
+            _currentIllnessRepository = currentIllnessRepository;
         }
 
-        public Task AddCurrentIllness(CurrentIllness currentIllness)
+        public async Task AddCurrentIllness(CurrentIllness currentIllness)
         {
-            throw new NotImplementedException();
+            await _currentIllnessRepository.AddAsync(currentIllness);
         }
 
-        public Task DeleteCurrentIllness(int id)
+        public async Task DeleteCurrentIllness(int id)
         {
-            throw new NotImplementedException();
+            await _currentIllnessRepository.DeleteAsync(id);
         }
 
-        public Task<IQueryable<CurrentIllness>> GetAllCurrentIllnesses()
+        public async Task<IQueryable<CurrentIllness>> GetAllCurrentIllnesses()
         {
             throw new NotImplementedException();
         }
@@ -31,9 +35,9 @@ namespace Project.Services
             throw new NotImplementedException();
         }
 
-        public Task UpdateCurrentIllness(CurrentIllness currentIllness)
+        public async Task UpdateCurrentIllness(CurrentIllness currentIllness)
         {
-            throw new NotImplementedException();
+            await _currentIllnessRepository.UpdateAsync(currentIllness);
         }
     }
 }

@@ -66,9 +66,9 @@
                     </button>
                     <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Bills" onclick="showBillModal(this)" data-patient-id="@item.PatientId" data-bill='@Json.Serialize(item.Bills)'><i class="bi bi-receipt-cutoff"></i></button>
                     <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Insurances" onclick="showInsuranceModal(this)" data-patient-id="@item.PatientId" data-insurance='@Json.Serialize(item.Insurances)'><i class="bi bi-shield-check"></i></button>
-                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Patient Tests"><i class="bi bi-card-list"></i></button>
-                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Appointments"><i class="bi bi-calendar-event"></i></button>
-                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Current Illness"><i class="bi bi-exclamation-circle"></i></button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Patient Tests" onclick="showPatientTestModal(this)" data-patient-id="@item.PatientId" data-tests='@Json.Serialize(item.PatientTests)' data-doctors='@Json.Serialize(ViewBag.Doctors)' data-tests-list='@Json.Serialize(ViewBag.Tests)'><i class="bi bi-card-list"></i></button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Appointments" onclick="showAppointmentModal(this)" data-patient-id="@item.PatientId" data-appointments='@Json.Serialize(item.Appointments)' data-doctors='@Json.Serialize(ViewBag.Doctors)'><i class="bi bi-calendar-event"></i></button>
+                    <button class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Current Illness" onclick="showCurrentIllnessModal(this)" data-patient-id="@item.PatientId" data-illnesses='@Json.Serialize(item.CurrentIllnesses)' data-doctors='@Json.Serialize(ViewBag.Doctors)'><i class="bi bi-exclamation-circle"></i></button>
                     <button class="btn btn-success" onclick="showEditPatientModal(@item.PatientId, '@item.Name', '@item.DateOfBirth', '@item.Sex', '@item.Address', '@item.ContactNumber', '@item.EmergencyContact')"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-danger" onclick="showDeletePatientModal(@item.PatientId, '@item.Name')"><i class="bi bi-x"></i></button>
                 </td>
@@ -567,7 +567,7 @@
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
+            confirmButtonText: 'Delete!',
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -616,7 +616,7 @@
                         <td>${insurance.policyNumber}</td>
                         <td>${insurance.coverageDetails}</td>
                         <td>
-                            <button class="btn btn-primary" title="Edit Insurance" onclick="showEditInsuranceModal(${insurance.insuranceId}, ${patientId}, '${insurance.providername}', '${insurance.policyNumber}', '${insurance.coverageDetails}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-success" title="Edit Insurance" onclick="showEditInsuranceModal(${insurance.insuranceId}, ${patientId}, '${insurance.providername}', '${insurance.policyNumber}', '${insurance.coverageDetails}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-danger" title="Delete Insurance" onclick="showDeleteInsuranceModal(${insurance.insuranceId}, '${insurance.providername}')"><i class="bi bi-trash"></i></button>
                         </td>
                     </tr>`;
@@ -729,7 +729,7 @@
             text: `Do you want to delete insurance from ${providername}?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
+            confirmButtonText: 'Delete!',
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -744,6 +744,561 @@
                     },
                     error: function (error) {
                         Swal.fire('Error!', 'There was an error deleting the insurance.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showPatientTestModal(btn) {
+        var patientTests = JSON.parse(btn.getAttribute('data-tests'));
+        var patientId = btn.getAttribute('data-patient-id');
+        var doctors = JSON.parse(btn.getAttribute('data-doctors'));
+        var tests = JSON.parse(btn.getAttribute('data-tests-list'));
+
+        // Check if patientTests is empty
+        var patientTestTable;
+        if (!patientTests.length) {
+            patientTestTable = 'No test records available for this patient.';
+        } else {
+            patientTestTable = `
+            <table class='table'>
+                <thead>
+                    <tr>
+                        <th>Date of Test</th>
+                        <th>Test</th>
+                        <th>Doctor</th>
+                        <th>Results</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            for (var test of patientTests) {
+                var testName = tests.find(t => t.testId === test.testId).testName;
+                var doctorName = doctors.find(d => d.doctorId === test.doctorId).name;
+
+                patientTestTable += `
+                <tr>
+                    <td>${new Date(test.dateOfTest).toLocaleDateString()}</td>
+                    <td>${testName}</td>
+                    <td>${doctorName}</td>
+                    <td>${test.results}</td>
+                    <td>
+                        <button class="btn btn-success" title="Edit Test" onclick="showEditPatientTestModal(${test.patientTestId}, ${patientId}, ${test.testId}, ${test.doctorId}, '${test.dateOfTest}', '${test.results}', '${JSON.stringify(tests).replace(/"/g, '&quot;')}', '${JSON.stringify(doctors).replace(/"/g, '&quot;')}')" > <i class="bi bi-pencil" > </i></button >
+                        <button class="btn btn-danger" title="Delete Test" onclick="showDeletePatientTestModal(${test.patientTestId}, '${testName}')"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+            }
+
+            patientTestTable += `</tbody></table>`;
+        }
+
+        Swal.fire({
+            title: 'Patient Test Details',
+            html: patientTestTable,
+            width: '70%',
+            customClass: {
+                content: 'text-left'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Add Test',
+            showConfirmButton: true,
+            cancelButtonText: 'Close'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showAddPatientTestModal(patientId, tests, doctors);
+            }
+        });
+    }
+
+    function showAddPatientTestModal(patientId, tests, doctors) {
+        Swal.fire({
+            title: 'Add Patient Test',
+            html: `
+                <input type="date" id="addDateOfTest" class="swal2-input" placeholder="Date of Test">
+
+                <select id="addTestId" class="swal2-input">
+                    ${tests.map(test => `<option value="${test.testId}">${test.testName}</option>`).join('')}
+                </select>
+
+                <select id="addDoctorId" class="swal2-input">
+                    ${doctors.map(doctor => `<option value="${doctor.doctorId}">${doctor.name}</option>`).join('')}
+                </select>
+
+                <input type="text" id="addResults" class="swal2-input" placeholder="Results">`,
+            showCancelButton: true,
+            confirmButtonText: 'Add',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    patientId: patientId,
+                    dateOfTest: document.getElementById('addDateOfTest').value,
+                    testId: document.getElementById('addTestId').value,
+                    doctorId: document.getElementById('addDoctorId').value,
+                    results: document.getElementById('addResults').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var newPatientTestData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addpatienttest",
+                    type: "POST",
+                    data: JSON.stringify(newPatientTestData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The patient test has been added!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the patient test.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditPatientTestModal(patientTestId, patientId, testId, doctorId, dateOfTest, results, tests, doctors) {
+        parsedTests = JSON.parse(tests)
+        parsedDoctors = JSON.parse(doctors)
+        Swal.fire({
+            title: 'Edit Patient Test',
+            html: `
+                <input type="date" id="editDateOfTest" class="swal2-input" placeholder="Date of Test" value="${new Date(dateOfTest).toISOString().split('T')[0]}">
+
+                <select id="editTestId" class="swal2-input">
+                    ${parsedTests.map(test => `<option value="${test.testId}" ${test.testId === testId ? 'selected' : ''}>${test.testName}</option>`).join('')}
+                </select>
+
+                <select id="editDoctorId" class="swal2-input">
+                    ${parsedDoctors.map(doctor => `<option value="${doctor.doctorId}" ${doctor.doctorId === doctorId ? 'selected' : ''}>${doctor.name}</option>`).join('')}
+                </select>
+
+                <input type="text" id="editResults" class="swal2-input" placeholder="Results" value="${results}">`,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    patientTestId: patientTestId,
+                    patientId: patientId,
+                    dateOfTest: document.getElementById('editDateOfTest').value,
+                    testId: document.getElementById('editTestId').value,
+                    doctorId: document.getElementById('editDoctorId').value,
+                    results: document.getElementById('editResults').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var editedPatientTestData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/editpatienttest",
+                    type: "PUT",
+                    data: JSON.stringify(editedPatientTestData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The patient test has been updated!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error updating the patient test.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeletePatientTestModal(patientTestId, testName) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to delete the test record for ${testName}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `https://localhost:7219/deletepatienttest/${patientTestId}`,
+                    type: "DELETE",
+                    success: function (response) {
+                        Swal.fire('Deleted!', 'Test record has been deleted successfully!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the test record.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showAppointmentModal(btn) {
+        var appointments = JSON.parse(btn.getAttribute('data-appointments'));
+        var patientId = btn.getAttribute('data-patient-id');
+        var doctors = JSON.parse(btn.getAttribute('data-doctors'));
+
+        var appointmentTable;
+        if (!appointments.length) {
+            appointmentTable = 'No appointment records available for this patient.';
+        } else {
+            appointmentTable = `
+            <table class='table'>
+                <thead>
+                    <tr>
+                        <th>Date and Time</th>
+                        <th>Doctor</th>
+                        <th>Purpose of Visit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            for (var appointment of appointments) {
+                var doctorName = doctors.find(d => d.doctorId === appointment.doctorId).name;
+
+                appointmentTable += `
+                <tr>
+                    <td>${new Date(appointment.dateAndTime).toISOString().slice(0, 16).replace("T", " ")}</td>
+                    <td>${doctorName}</td>
+                    <td>${appointment.purposeOfVisit}</td>
+                    <td>
+                        <button class="btn btn-success" title="Edit Appointment" onclick="showEditAppointmentModal(${appointment.appointmentId}, ${appointment.patientId}, ${appointment.doctorId}, '${appointment.dateAndTime}', '${appointment.purposeOfVisit}', '${JSON.stringify(doctors).replace(/"/g, '&quot;')}')" ><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-danger" title="Delete Appointment" onclick="showDeleteAppointmentModal(${appointment.appointmentId}, '${new Date(appointment.dateAndTime).toLocaleString()}')"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+            }
+
+            appointmentTable += `</tbody></table>`;
+        }
+
+        Swal.fire({
+            title: 'Appointment Details',
+            html: appointmentTable,
+            width: '70%',
+            customClass: {
+                content: 'text-left'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Add Appointment',
+            cancelButtonText: 'Close'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showAddAppointmentModal(patientId, doctors);
+            }
+        });
+    }
+
+    function showAddAppointmentModal(patientId, doctors) {
+        Swal.fire({
+            title: 'Add Appointment',
+            html: `
+                <input type="datetime-local" id="addDateAndTime" class="swal2-input" placeholder="Date and Time">
+
+                <select id="addDoctorId" class="swal2-input">
+                    ${doctors.map(doctor => `<option value="${doctor.doctorId}">${doctor.name}</option>`).join('')}
+                </select>
+
+                <input type="text" id="addPurposeOfVisit" class="swal2-input" placeholder="Purpose of Visit">`,
+            showCancelButton: true,
+            confirmButtonText: 'Add',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    patientId: patientId,
+                    dateAndTime: document.getElementById('addDateAndTime').value,
+                    doctorId: document.getElementById('addDoctorId').value,
+                    purposeOfVisit: document.getElementById('addPurposeOfVisit').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var newAppointmentData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addappointment",
+                    type: "POST",
+                    data: JSON.stringify(newAppointmentData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The appointment has been added!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the appointment.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditAppointmentModal(appointmentId, patientId, doctorId, dateAndTime, purposeOfVisit, doctors) {
+        var parsedDoctors = JSON.parse(doctors);
+
+        Swal.fire({
+            title: 'Edit Appointment',
+            html: `
+                <input type="datetime-local" id="editDateAndTime" class="swal2-input" value="${new Date(dateAndTime).toISOString().slice(0, 16)}">
+
+                <select id="editDoctorId" class="swal2-input">
+                    ${parsedDoctors.map(doctor => `<option value="${doctor.doctorId}" ${doctor.doctorId === doctorId ? 'selected' : ''}>${doctor.name}</option>`).join('')}
+                </select>
+
+                <input type="text" id="editPurposeOfVisit" class="swal2-input" value="${purposeOfVisit}">`,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    AppointmentId: appointmentId,
+                    PatientId: patientId,
+                    DateAndTime: document.getElementById('editDateAndTime').value,
+                    DoctorId: document.getElementById('editDoctorId').value,
+                    PurposeOfVisit: document.getElementById('editPurposeOfVisit').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var updatedAppointmentData = result.value;
+
+                $.ajax({
+                    url: `https://localhost:7219/editappointment/`,
+                    type: "PUT",
+                    data: JSON.stringify(updatedAppointmentData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Updated!', 'The appointment has been updated!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error updating the appointment.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeleteAppointmentModal(appointmentId, dateAndTime) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete the appointment scheduled for ${dateAndTime}`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `https://localhost:7219/deleteappointment/${appointmentId}`,
+                    type: "DELETE",
+                    success: function (response) {
+                        Swal.fire('Deleted!', 'The appointment has been deleted.', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the appointment.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showCurrentIllnessModal(btn) {
+        var illnesses = JSON.parse(btn.getAttribute('data-illnesses'));
+        var patientId = btn.getAttribute('data-patient-id');
+        var doctors = JSON.parse(btn.getAttribute('data-doctors'));
+
+        var illnessTable;
+        if (!illnesses.length) {
+            illnessTable = 'No current illness records available for this patient.';
+        } else {
+            illnessTable = `
+            <table class='table'>
+                <thead>
+                    <tr>
+                        <th>Disease Name</th>
+                        <th>Date Diagnosed</th>
+                        <th>Current Treatment</th>
+                        <th>Doctor</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            for (var illness of illnesses) {
+                var doctorName = doctors.find(d => d.doctorId === illness.doctorId).name;
+
+                illnessTable += `
+                <tr>
+                    <td>${illness.diseaseName}</td>
+                    <td>${new Date(illness.dateDiagnosed).toLocaleDateString()}</td>
+                    <td>${illness.currentTreatment}</td>
+                    <td>${doctorName}</td>
+                    <td>
+                        <button class="btn btn-success" title="Edit Illness" onclick="showEditCurrentIllnessModal(${illness.illnessId}, ${illness.patientId}, '${illness.diseaseName}', '${illness.dateDiagnosed}', '${illness.currentTreatment}', ${illness.doctorId}, '${JSON.stringify(doctors).replace(/"/g, '&quot;')}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-danger" title="Delete Illness" onclick="showDeleteCurrentIllnessModal(${illness.illnessId}, '${illness.diseaseName}')"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+            }
+
+            illnessTable += `</tbody></table>`;
+        }
+
+        Swal.fire({
+            title: 'Current Illness Details',
+            html: illnessTable,
+            width: '70%',
+            customClass: {
+                content: 'text-left'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Add Illness',
+            cancelButtonText: 'Close'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showAddCurrentIllnessModal(patientId, doctors);
+            }
+        });
+    }
+
+    function showAddCurrentIllnessModal(patientId, doctors) {
+        Swal.fire({
+            title: 'Add Current Illness',
+            html: `
+                <input type="text" id="addDiseaseName" class="swal2-input" placeholder="Disease Name">
+
+                <input type="date" id="addDateDiagnosed" class="swal2-input" placeholder="Date Diagnosed">
+
+                <input type="text" id="addCurrentTreatment" class="swal2-input" placeholder="Current Treatment">
+
+                <select id="addDoctorId" class="swal2-input">
+                    ${doctors.map(doctor => `<option value="${doctor.doctorId}">${doctor.name}</option>`).join('')}
+                </select>`,
+            showCancelButton: true,
+            confirmButtonText: 'Add',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    patientId: patientId,
+                    diseaseName: document.getElementById('addDiseaseName').value,
+                    dateDiagnosed: document.getElementById('addDateDiagnosed').value,
+                    currentTreatment: document.getElementById('addCurrentTreatment').value,
+                    doctorId: document.getElementById('addDoctorId').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var newIllnessData = result.value;
+
+                $.ajax({
+                    url: "https://localhost:7219/addcurrentillness",
+                    type: "POST",
+                    data: JSON.stringify(newIllnessData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Saved!', 'The illness record has been added!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error adding the illness record.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showEditCurrentIllnessModal(illnessId, patientId, diseaseName, dateDiagnosed, currentTreatment, doctorId, doctors) {
+        var parsedDoctors = JSON.parse(doctors);
+
+        Swal.fire({
+            title: 'Edit Current Illness',
+            html: `
+                <input type="text" id="editDiseaseName" class="swal2-input" value="${diseaseName}">
+
+                <input type="date" id="editDateDiagnosed" class="swal2-input" value="${new Date(dateDiagnosed).toISOString().slice(0, 10)}">
+
+                <input type="text" id="editCurrentTreatment" class="swal2-input" value="${currentTreatment}">
+
+                <select id="editDoctorId" class="swal2-input">
+                    ${parsedDoctors.map(doctor => `<option value="${doctor.doctorId}" ${doctor.doctorId === doctorId ? 'selected' : ''}>${doctor.name}</option>`).join('')}
+                </select>`,
+            showCancelButton: true,
+            confirmButtonText: 'Update',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                return {
+                    illnessId: illnessId,
+                    patientId: patientId,
+                    diseaseName: document.getElementById('editDiseaseName').value,
+                    dateDiagnosed: document.getElementById('editDateDiagnosed').value,
+                    currentTreatment: document.getElementById('editCurrentTreatment').value,
+                    doctorId: document.getElementById('editDoctorId').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var updatedIllnessData = result.value;
+
+                $.ajax({
+                    url: `https://localhost:7219/editcurrentillness/`,
+                    type: "PUT",
+                    data: JSON.stringify(updatedIllnessData),
+                    contentType: "application/json",
+                    success: function (response) {
+                        Swal.fire('Updated!', 'The illness record has been updated!', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error updating the illness record.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showDeleteCurrentIllnessModal(illnessId, diseaseName) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete the record for ${diseaseName}`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `https://localhost:7219/deletecurrentillness/${illnessId}`,
+                    type: "DELETE",
+                    success: function (response) {
+                        Swal.fire('Deleted!', 'The illness record has been deleted.', 'success');
+                        setTimeout(function () {
+                            location.reload()
+                        }, 3000);
+                    },
+                    error: function (error) {
+                        Swal.fire('Error!', 'There was an error deleting the illness record.', 'error');
                     }
                 });
             }

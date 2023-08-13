@@ -16,8 +16,11 @@ namespace Project.Controllers
         private readonly IMedicalHistoryService _medicalHistoryService;
         private readonly IBillService _billService;
         private readonly IInsuranceService _insuranceService;
+        private readonly IPatientTestService _testPatientService;
+        private readonly IAppointmentService _appointmentService;
+        private readonly ICurrentIllnessService _currentIllnessService;
 
-        public HomeController(ILogger<HomeController> logger, IPatientService patientService, IMedicalHistoryService medicalHistoryService, IBillService billService, IInsuranceService insuranceService, IDoctorService doctorService, ITestService testService)
+        public HomeController(ILogger<HomeController> logger, IPatientService patientService, IMedicalHistoryService medicalHistoryService, IBillService billService, IInsuranceService insuranceService, IDoctorService doctorService, ITestService testService, IPatientTestService testPatientService, IAppointmentService appointmentService, ICurrentIllnessService currentIllnessService)
         {
             _logger = logger;
             _patientService = patientService;
@@ -26,6 +29,9 @@ namespace Project.Controllers
             _insuranceService = insuranceService;
             _doctorService = doctorService;
             _testService = testService;
+            _testPatientService = testPatientService;
+            _appointmentService = appointmentService;
+            _currentIllnessService = currentIllnessService;
         }
 
         public IActionResult Index()
@@ -36,6 +42,10 @@ namespace Project.Controllers
         public async Task<IActionResult> PatientsAsync()
         {
             var patients = await _patientService.GetAllPatients();
+            var doctors = await _doctorService.GetAllDoctors();
+            var tests = await _testService.GetAllTests();
+            ViewBag.Doctors = doctors.ToList();
+            ViewBag.Tests = tests.ToList();
             return View(patients);
         }
 
@@ -203,6 +213,78 @@ namespace Project.Controllers
         public async Task<IActionResult> DeleteTest(int id)
         {
             await _testService.DeleteTest(id);
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("addpatienttest")]
+        public async Task<IActionResult> AddPatientTest([FromBody] PatientTest patientTest)
+        {
+            await _testPatientService.AddPatientTest(patientTest);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("editpatienttest")]
+        public async Task<IActionResult> EditPatientTest([FromBody] PatientTest patientTest)
+        {
+            await _testPatientService.UpdatePatientTest(patientTest);
+            return Ok();
+        }
+
+        [HttpDelete]
+        [Route("deletepatienttest/{id}")]
+        public async Task<IActionResult> DeletePatientTest(int id)
+        {
+            await _testPatientService.DeletePatientTest(id);
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("addcurrentillness")]
+        public async Task<IActionResult> AddCurrentIllness([FromBody] CurrentIllness currentIllness)
+        {
+            await _currentIllnessService.AddCurrentIllness(currentIllness);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("editcurrentillness")]
+        public async Task<IActionResult> EditCurrentIllness([FromBody] CurrentIllness currentIllness)
+        {
+            await _currentIllnessService.UpdateCurrentIllness(currentIllness);
+            return Ok();
+        }
+
+        [HttpDelete]
+        [Route("deletecurrentillness/{id}")]
+        public async Task<IActionResult> DeleteCurrentIllness(int id)
+        {
+            await _currentIllnessService.DeleteCurrentIllness(id);
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("addappointment")]
+        public async Task<IActionResult> AddAppointment([FromBody] Appointment appointment)
+        {
+            await _appointmentService.AddAppointment(appointment);
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("editappointment")]
+        public async Task<IActionResult> EditAppointment([FromBody] Appointment appointment)
+        {
+            await _appointmentService.UpdateAppointment(appointment);
+            return Ok();
+        }
+
+        [HttpDelete]
+        [Route("deleteappointment/{id}")]
+        public async Task<IActionResult> DeleteAppointment(int id)
+        {
+            await _appointmentService.DeleteAppointment(id);
             return Ok();
         }
     }

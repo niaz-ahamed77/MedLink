@@ -1,27 +1,31 @@
 ﻿using Project.Models;
 using Project.Models.Entities;
 using Project.Repositories;
+using Project.Repositories.Interfaces;
 using Project.Services.Interfaces;
 
 namespace Project.Services
 {
-    public class PatientTestService : Repository<PatientTest>, IPatientTestService
+    public class PatientTestService : IPatientTestService
     {
-        public PatientTestService(MedLinkDbContext dbContext) : base(dbContext)
+        private readonly IRepository<PatientTest> _patientTestRepository;
+
+        public PatientTestService(IRepository<PatientTest> patientTestRepository)
         {
+            _patientTestRepository = patientTestRepository;
         }
 
-        public Task AddPatientTest(PatientTest patientTest)
+        public async Task AddPatientTest(PatientTest patientTest)
         {
-            throw new NotImplementedException();
+            await _patientTestRepository.AddAsync(patientTest);
         }
 
-        public Task DeletePatientTest(int id)
+        public async Task DeletePatientTest(int id)
         {
-            throw new NotImplementedException();
+            await _patientTestRepository.DeleteAsync(id);
         }
 
-        public Task<IQueryable<PatientTest>> GetAllPatientTests()
+        public async Task<IQueryable<PatientTest>> GetAllPatientTests()
         {
             throw new NotImplementedException();
         }
@@ -31,9 +35,9 @@ namespace Project.Services
             throw new NotImplementedException();
         }
 
-        public Task UpdatePatientTest(PatientTest patientTest)
+        public async Task UpdatePatientTest(PatientTest patientTest)
         {
-            throw new NotImplementedException();
+            await _patientTestRepository.UpdateAsync(patientTest);
         }
     }
 }
