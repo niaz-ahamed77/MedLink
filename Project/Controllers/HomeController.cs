@@ -63,7 +63,8 @@ namespace Project.Controllers
 
         public async Task<IActionResult> QueriesAsync()
         {
-            return View();
+            var patients = (await _patientService.GetAllPatients()).ToList();
+            return View(patients);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

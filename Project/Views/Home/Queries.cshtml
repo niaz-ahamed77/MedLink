@@ -1,8 +1,142 @@
-﻿@{
+﻿@model IEnumerable<Project.Models.Entities.Patient>
+@{
     ViewData["Title"] = "Queries";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>MedLink is your patient management portal!</p>
-</div>
+<h1>Query Results</h1>
+
+<p>
+    SQL Query 4: Uses a FULL OUTER JOIN
+    --obtain information about patients and their corresponding medical histories
+    select P.PatientId, P.Name as PatientName, MH.DiseaseName, FORMAT(MH.DateDiagnosed, 'yyyy-MM-dd') as DateDiagnosed
+    from Patients P
+    FULL OUTER JOIN MedicalHistories MH on P.PatientId = MH.PatientId;
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>PatientId</th>
+            <th>Patient Name</th>
+            <th>Disease Name</th>
+            <th>Date Diagnosed</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var patient in Model)
+        {
+            foreach (var history in patient.MedicalHistories)
+            {
+                <tr>
+                    <td>@patient.PatientId</td>
+                    <td>@patient.Name</td>
+                    <td>@history.DiseaseName</td>
+                    <td>@history.DateDiagnosed.ToString("yyyy-MM-dd")</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<br />
+<p>
+    SQL Query 6: Create your own non-trivial SQL query (must use at least two tables in FROM clause)
+    -- obtain information about patients who have both medical history records and insurance coverage
+    select P.PatientId, P.Name as PatientName, P.Address, I.Providername, I.PolicyNumber
+    from Patients P
+    JOIN Insurances I on P.PatientId = I.PatientId
+    where P.PatientId IN (
+    select DISTINCT MH.PatientId
+    from MedicalHistories MH
+    );
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>PatientId</th>
+            <th>Patient Name</th>
+            <th>Address</th>
+            <th>Provider Name</th>
+            <th>Policy Number</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var patient in Model)
+        {
+            <tr>
+                @foreach(var insurance in patient.Insurances) {
+                    <td>@patient.PatientId</td>
+                    <td>@patient.Name</td>
+                    <td>@patient.Address</td>
+                    <td>@insurance.Providername</td>
+                    <td>@insurance.PolicyNumber</td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+<br />
+<p>
+    SQL Query 3: A correlated nested query with proper aliasing applied
+    -- obtain the names of patients who have medical histories of a specific disease ('Diabetes') and also display the disease name in the result
+    select
+    P.PatientId,
+    P.Name as PatientName,
+    MH.DiseaseName
+    from Patients P
+    JOIN MedicalHistories MH on P.PatientId = MH.PatientId
+    where MH.DiseaseName = 'Diabetes';
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>PatientId</th>
+            <th>Patient Name</th>
+            <th>Disease Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var patient in Model)
+        {
+            foreach (var medicalHistory in patient.MedicalHistories)
+            {
+                if (medicalHistory.DiseaseName == "Diabetes")
+                {
+                    <tr>
+                        <td>@patient.PatientId</td>
+                        <td>@patient.Name</td>
+                        <td>@medicalHistory.DiseaseName</td>
+                    </tr>
+                }
+            }
+        }
+    </tbody>
+</table>
+<br />
+<p>
+    SQL Query 5: Uses nested queries with any of the set operations UNION, EXCEPT, or INTERSECT*
+    --use the EXCEPT set operation to obtain a list of patient names from the Patients table who do not have any medical history records
+    select Name
+    from Patients
+    EXCEPT
+    select P.Name
+    from MedicalHistories MH
+    JOIN Patients P on MH.PatientId = P.PatientId;
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var patient in Model)
+        {
+            if (!patient.MedicalHistories.Any())
+            {
+                <tr>
+                    <td>@patient.Name</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
