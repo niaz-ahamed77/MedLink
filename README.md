@@ -14,4 +14,3 @@ TODO
 - Create repositories for all the entities for custom dbContext operations
 - Create additional views
 - Create the API Controllers
-- Create the UI
